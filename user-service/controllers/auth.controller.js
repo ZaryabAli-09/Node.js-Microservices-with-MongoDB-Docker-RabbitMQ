@@ -33,29 +33,22 @@ export async function loginUser(req, res) {
         .status(400)
         .json({ message: "Email and password are required" });
     }
-    const user = await User.find
-      .findOne({ email, password })
-      .select("-password");
+    const user = await User.findOne({ email }).select("-password");
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "30d",
-      }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "30d",
+    });
 
-    return res
-      .status(200)
-      .json({ message: "Login successful", token })
-      .cookies("access_token", token, {
-        httpOnly: true,
-        sameSite: "Strict",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
+    // set cookie BEFORE sending response
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // change to true in production
+      sameSite: "none",
+    });
+    return res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     res.status(500).json({ message: "Internal Server error" || error.message });
   }

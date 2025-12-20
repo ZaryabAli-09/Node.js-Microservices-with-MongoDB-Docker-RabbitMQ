@@ -1,8 +1,8 @@
 import express from "express";
 import { connectDB } from "./utils/dbConnection.js";
 import dotenv from "dotenv";
+import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
-
 dotenv.config();
 const app = express();
 
@@ -15,7 +15,8 @@ app.get("/health", (req, res) => {
   res.send("User Service is up and running ");
 });
 
-app.use("/user-service/", userRouter);
+app.use("/user-service/auth/", authRouter);
+app.use("/user-service/users/", userRouter);
 
 // Wildcard route for handling 404 errors
 app.use((req, res) => {
