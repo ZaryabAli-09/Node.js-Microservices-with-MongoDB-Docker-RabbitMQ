@@ -1,7 +1,7 @@
 import express from "express";
-import { errorMiddleware } from "./middlewares/errorMiddleware.js";
 import { connectDB } from "./utils/dbConnection.js";
 import dotenv from "dotenv";
+import userRouter from "./routes/user.routes.js";
 
 dotenv.config();
 const app = express();
@@ -15,15 +15,12 @@ app.get("/health", (req, res) => {
   res.send("User Service is up and running ");
 });
 
-// app.use("/api/v1/users", ));
+app.use("/user-service/", userRouter);
 
 // Wildcard route for handling 404 errors
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
-
-// Error Middleware
-app.use(errorMiddleware);
 
 app.listen(port, async () => {
   try {

@@ -1,40 +1,62 @@
-import { ApiError } from "../utils/apiError.js";
-
-export async function registerUser(req, res, next) {
+import jwt from "jsonwebtoken";
+import { User } from "../models/user.model.js";
+export async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      throw ApiError(400, "Name, email and password are required");
+      return res
+        .status(400)
+        .json({ message: "Name, email and password are required" });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw ApiError(409, "User with this email already exists");
+      return res
+        .status(409)
+        .json({ message: "User with this email already exists" });
     }
     const newUser = new User({ name, email, password });
     await newUser.save();
 
-    res.status(201).json(new ApiResponse(null, "User registered successfully"));
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: "Internal Server error" || error.message });
   }
 }
 
-export async function loginUser(req, res, next) {
+export async function loginUser(req, res) {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      throw ApiError(400, "Email and password are required");
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
     const user = await User.find
       .findOne({ email, password })
       .select("-password");
     if (!user) {
-      throw ApiError(401, "Invalid email or password");
+      return res.status(401).json({ message: "Invalid email or password" });
     }
-    res.status(200).json(new ApiResponse(user, "Login successful"));
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Login successful", token })
+      .cookies("access_token", token, {
+        httpOnly: true,
+        sameSite: "Strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
   } catch (error) {
-    next(error);
+    res.status(500).json({ message: "Internal Server error" || error.message });
   }
 }
