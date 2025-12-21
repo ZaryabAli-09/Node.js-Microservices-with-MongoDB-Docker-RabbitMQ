@@ -1,6 +1,8 @@
+import jwt from "jsonwebtoken";
+
 export async function verifyUser(req, res, next) {
   try {
-    const token = req.cookies?.token;
+    const token = req.cookies.token;
     if (!token) {
       return res
         .status(401)
@@ -10,6 +12,7 @@ export async function verifyUser(req, res, next) {
     req.user = decoded;
     next();
   } catch (error) {
+    console.log(error.message);
     res.status(401).json({ message: "Unauthorized: Invalid token" });
   }
 }

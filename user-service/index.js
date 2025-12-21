@@ -3,11 +3,12 @@ import { connectDB } from "./utils/dbConnection.js";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
+import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 
 app.use(express.json());
-
+app.use(cookieParser());
 const port = process.env.PORT || 3000;
 
 // Api health check route
