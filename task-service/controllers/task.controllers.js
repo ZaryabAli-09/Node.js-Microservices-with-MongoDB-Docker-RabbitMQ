@@ -2,7 +2,8 @@ import { Task } from "../models/task.model.js";
 
 export async function createTask(req, res) {
   try {
-    const userId = req.user._id;
+    console.log(req.user);
+    const userId = req.user?.id;
     const { title, description } = req.body;
     const newTask = new Task({ title, description, userId });
     const savedTask = await newTask.save();
@@ -43,9 +44,13 @@ export async function getTaskById(req, res) {
 }
 export async function getUserTasks(req, res) {
   try {
-    const userId = req.user._id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID not found in token" });
+    }
     const tasks = await Task.find({ userId });
-    if (tasks.length === 0) {
+    if (!tasks) {
       return res.status(404).json({ message: "No tasks found for this user" });
     }
     res
