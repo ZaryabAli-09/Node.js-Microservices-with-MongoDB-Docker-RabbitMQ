@@ -11,6 +11,7 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 
 // Api health check route
+
 app.get("/health", (req, res) => {
   res.send("User Service is up and running ");
 });

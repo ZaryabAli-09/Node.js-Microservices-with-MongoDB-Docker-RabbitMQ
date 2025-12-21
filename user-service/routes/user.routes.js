@@ -5,13 +5,14 @@ import {
   getUserById,
   updateUser,
 } from "../controllers/user.controllers.js";
+import { verifyUser } from "../middlewares/verifyUser.js";
 
 const router = express.Router();
 
 router.get("/all", getAllUsers);
 router.get("/:id", getUserById);
 
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser);
+router.put("/:id", verifyUser, updateUser);
+router.delete("/:id", verifyUser, deleteUser);
 
 export default router;
