@@ -91,3 +91,33 @@ export async function deleteTask(req, res) {
     res.status(500).json({ message: error.message || "Internal Server Error" });
   }
 }
+
+export async function createTasks(req, res) {
+  try {
+    const { tasks, userId } = req.body;
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({
+        message: "Tasks must be a non-empty array",
+      });
+    }
+
+    // map tasks to attach userId
+    const tasksData = tasks.map((task) => ({
+      ...task,
+      userId,
+    }));
+
+    // insert many tasks
+    const savedTasks = await Task.insertMany(tasksData);
+
+    return res.status(201).json({
+      message: "Tasks created successfully",
+      insertedCount: savedTasks.length,
+      data: savedTasks,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
+  }
+}
