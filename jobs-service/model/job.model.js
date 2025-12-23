@@ -7,9 +7,10 @@ const jobsSchema = new mongoose.Schema(
     jobType: { type: String, enum: ["IMPORT", "EXPORT "] },
     status: {
       type: String,
-      enum: ["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"],
+      enum: ["PENDING", "RUNNING", "PAUSED", "COMPLETED", "FAILED", "CANCELED"],
       default: "PENDING",
     },
+    totalChunks: { type: Number, default: 10 },
     chunkSize: { type: Number, default: 10 },
     currentChunk: { type: Number, default: 0 },
     totalItemsNum: { type: Number, default: 0 },

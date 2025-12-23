@@ -3,6 +3,9 @@ import dotenv from "dotenv";
 import { ImportEngine } from "./engine/importEngine.js";
 
 dotenv.config();
+
+import "./worker/import.worker.js";
+
 const app = express();
 const PORT = process.env.PORT || 5003;
 

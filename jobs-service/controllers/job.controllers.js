@@ -26,7 +26,7 @@ export async function createJob(req, res) {
 
     return res.status(201).json({
       message: `New job created by ${user?.name}`,
-      job: newJob,
+      data: newJob,
     });
   } catch (error) {
     return res
@@ -37,16 +37,20 @@ export async function createJob(req, res) {
 
 export async function updateJob(req, res) {
   try {
-    const { jobId, processedItems, currentChunk } = req.body;
+    const { jobId, processedItems, currentChunk, status } = req.body;
 
+    console.log("Status Recieved:::", status);
     const job = await Job.findById(jobId);
 
     if (!job) return res.status(404).json({ message: "Job not found" });
 
     job.processedItems = processedItems;
     job.currentChunk = currentChunk;
-    job.status =
-      processedItems >= job.totalItemsNum ? "COMPLETED" : "IN_PROGRESS";
+    if (status) {
+      job.status = status;
+    } else {
+      job.status = processedItems >= job.totalItemsNum ? "COMPLETED" : status;
+    }
 
     await job.save();
 
@@ -55,6 +59,21 @@ export async function updateJob(req, res) {
       message: "Job updated",
       status: job.status,
     });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+export async function getJobBy(req, res) {
+  try {
+    const { id } = req.params;
+
+    const job = await Job.findById(id);
+
+    return res
+      .status(200)
+      .json({ message: "Get job details successfully", data: job });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
