@@ -6,7 +6,7 @@ export async function createJob(req, res) {
     const { userId, jobType, totalItemsNum, chunkSize } = req.body;
 
     const fetchUserInfo = await axios.get(
-      `http://localhost:8000/user-service/users/${userId}`
+      `http://${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
     );
 
     const user = await fetchUserInfo.data.data;

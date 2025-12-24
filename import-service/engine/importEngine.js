@@ -23,7 +23,7 @@ export async function ImportEngine(req, res) {
 
     // create job in job-service
     const createJobResp = await axios.post(
-      "http://localhost:8002/job-service/create",
+      `http://${process.env.JOB_SERVICE_URL}/job-service/create`,
       {
         userId,
         jobType: "IMPORT",

@@ -15,10 +15,10 @@ const importWorker = new Worker(
 
       // Get current job state from Job Service
       let jobResp = await axios.get(
-        `http://localhost:8002/job-service/${jobId}`
+        `http://${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
       );
 
-      //   just for logging we will remove it as we will put retroes in the logic even if something fails like server is down db is down etc
+      //   just for logging we  will remove it as we will put retroes in the logic even if something fails like server is down db is down etc
       if (!jobResp) {
         throw new Error("No job found with this id");
       }
@@ -36,7 +36,7 @@ const importWorker = new Worker(
       }
       // Update job status to RUNNING
       const updatedJobResp = await axios.post(
-        `http://localhost:8002/job-service/update`,
+        `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
         {
           jobId,
           status: "RUNNING",
@@ -57,7 +57,7 @@ const importWorker = new Worker(
         try {
           // Fetch latest status for pause/cancel
           jobResp = await axios.get(
-            `http://localhost:8002/job-service/${jobId}`
+            `http://${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
           );
 
           const latestStatus = jobResp?.data?.data?.status;
@@ -90,21 +90,27 @@ const importWorker = new Worker(
           );
 
           // Call task service
-          await axios.post(`http://localhost:8001/task-service/create-many`, {
-            tasks: chunk,
-            userId,
-          });
+          await axios.post(
+            `http://${process.env.TASK_SERVICE_URL}/task-service/create-many`,
+            {
+              tasks: chunk,
+              userId,
+            }
+          );
 
           // Update job progress
-          await axios.post(`http://localhost:8002/job-service/update`, {
-            jobId,
-            currentChunk: chunkIndex + 1,
-            processedItems: Math.min(
-              (chunkIndex + 1) * chunkSize,
-              tasks.length
-            ),
-            lastProcessedIndex: start + chunk.length,
-          });
+          await axios.post(
+            `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
+            {
+              jobId,
+              currentChunk: chunkIndex + 1,
+              processedItems: Math.min(
+                (chunkIndex + 1) * chunkSize,
+                tasks.length
+              ),
+              lastProcessedIndex: start + chunk.length,
+            }
+          );
 
           console.log(
             `[Worker] Chunk ${chunkIndex + 1} processed successfully.`
@@ -124,10 +130,13 @@ const importWorker = new Worker(
       }
 
       // Mark job as completed
-      await axios.post(`http://localhost:8002/job-service/update`, {
-        jobId,
-        status: "COMPLETED",
-      });
+      await axios.post(
+        `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
+        {
+          jobId,
+          status: "COMPLETED",
+        }
+      );
       console.log(`[Worker] Job ${jobId} completed successfully!`);
     } catch (error) {
       console.error(`[Worker] Job ${job.id} failed:`, error);

@@ -8,6 +8,12 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 8003
+EXPOSE 8001
 
 CMD ["node", "index.js"]
+
+
+# subscriptions of sellers
+# signup seller registration 
+# rbac role based access 
+# courier crud
