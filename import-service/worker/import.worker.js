@@ -12,7 +12,6 @@ const importWorker = new Worker(
       console.log(
         `\n[Worker] Starting job: ${jobId} by ${userId} :: Tasks Length: ${tasks.length}, Chunks: ${chunkSize} `
       );
-      await wait(10000); // optional delay
 
       // Get current job state from Job Service
       let jobResp = await axios.get(
@@ -61,7 +60,7 @@ const importWorker = new Worker(
             `http://localhost:8002/job-service/${jobId}`
           );
 
-          const latestStatus = jobResp.data.data.status;
+          const latestStatus = jobResp?.data?.data?.status;
 
           if (latestStatus === "PAUSED") {
             console.log(
@@ -69,9 +68,8 @@ const importWorker = new Worker(
                 chunkIndex + 1
               }. Exiting.`
             );
-            throw new Error("PAUSED");
+            return;
           }
-          //   return;
 
           if (latestStatus === "CANCELED") {
             console.log(
