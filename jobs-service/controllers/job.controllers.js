@@ -4,16 +4,25 @@ import { Job } from "../model/job.model.js";
 export async function createJob(req, res) {
   try {
     const { userId, jobType, totalItemsNum, chunkSize } = req.body;
-
-    const fetchUserInfo = await axios.get(
-      `http://${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
-    );
-
-    const user = await fetchUserInfo.data.data;
-
-    if (!user) {
+    if (!userId) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Fetch user info
+    let user;
+    try {
+      const fetchUserInfo = await axios.get(
+        `http://${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
+      );
+
+      if (!fetchUserInfo) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      user = fetchUserInfo.data.data;
+    } catch (err) {
+      return res.status(502).json({ message: "Failed to fetch user info" });
+    }
+
     const newJob = new Job({
       userId,
       jobType,
@@ -39,7 +48,6 @@ export async function updateJob(req, res) {
   try {
     const { jobId, processedItems, currentChunk, status } = req.body;
 
-    console.log("Status Recieved:::", status);
     const job = await Job.findById(jobId);
 
     if (!job) return res.status(404).json({ message: "Job not found" });

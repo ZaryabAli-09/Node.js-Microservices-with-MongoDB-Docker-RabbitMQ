@@ -15,6 +15,6 @@ app.use("/job-service", jobRouter);
 
 // App listening
 app.listen(PORT, async () => {
-  await connectDB();
   console.log(`Jobs Service is running on port ${PORT} 🚀`);
+  await connectDB();
 });

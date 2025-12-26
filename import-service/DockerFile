@@ -1,13 +1,21 @@
+# specifying the runtime to run our app on
 FROM node:24-alpine
 
+
+# Setting working directory inside container e.g our service will in app folder in docker conatiner
 WORKDIR /app
 
+# Copy package files first (for caching)
 COPY package*.json ./
 
+# installing the app 
 RUN npm install
 
+#copy the rest of files inside app  
 COPY . .
 
+# expose port to run the conatiner 
 EXPOSE 8003
 
+# start the app 
 CMD ["node", "index.js"]
