@@ -14,13 +14,11 @@ export async function createJob(req, res) {
       const fetchUserInfo = await axios.get(
         `http://${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
       );
-
-      if (!fetchUserInfo) {
-        return res.status(404).json({ message: "User not found" });
-      }
       user = fetchUserInfo.data.data;
     } catch (err) {
-      return res.status(502).json({ message: "Failed to fetch user info" });
+      return res.status(err.response.status || 500).json({
+        message: err?.response?.data?.message || "Failed to fetch user info",
+      });
     }
 
     const newJob = new Job({

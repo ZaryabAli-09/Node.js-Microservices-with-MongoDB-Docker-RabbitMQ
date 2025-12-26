@@ -20,7 +20,6 @@ export async function ImportEngine(req, res) {
         description: "description ::" + t.todo,
       }));
     } catch (err) {
-      console.error("***Error fetching tasks***", err.message);
       return res.status(502).json({ message: "Failed to fetch tasks" });
     }
 
@@ -41,20 +40,11 @@ export async function ImportEngine(req, res) {
         }
       );
 
-      // Check if job-service returned an error
-      if (!createJobResp.status == true) {
-        return res.status(400).json({
-          message: createJobResp.data?.message || "Job creation failed",
-        });
-      }
-
       jobId = createJobResp.data.data._id;
     } catch (err) {
-      console.error(
-        "***Error creating job***",
-        err.response?.data || err.message
-      );
-      return res.status(502).json({ message: "Failed to create job" });
+      return res
+        .status(err.response.status || 502)
+        .json({ message: err.response.data.message || "Failed to create job" });
     }
 
     // Add job to queue
@@ -65,7 +55,6 @@ export async function ImportEngine(req, res) {
         { attempts: 5 }
       );
     } catch (err) {
-      console.error("***Error adding job to queue***", err.message);
       return res.status(500).json({ message: "Failed to queue job" });
     }
 
