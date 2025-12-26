@@ -43,7 +43,7 @@ export async function ImportEngine(req, res) {
       jobId = createJobResp.data.data._id;
     } catch (err) {
       return res
-        .status(err.response.status || 502)
+        .status(err?.response?.status || 502)
         .json({ message: err.response.data.message || "Failed to create job" });
     }
 

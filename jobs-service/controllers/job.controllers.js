@@ -16,7 +16,7 @@ export async function createJob(req, res) {
       );
       user = fetchUserInfo.data.data;
     } catch (err) {
-      return res.status(err.response.status || 500).json({
+      return res.status(err?.response?.status || 500).json({
         message: err?.response?.data?.message || "Failed to fetch user info",
       });
     }
