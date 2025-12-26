@@ -12,8 +12,9 @@ export async function createJob(req, res) {
     let user;
     try {
       const fetchUserInfo = await axios.get(
-        `http://${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
+        `${process.env.USER_SERVICE_URL}/user-service/users/${userId}`
       );
+
       user = fetchUserInfo.data.data;
     } catch (err) {
       return res.status(err?.response?.status || 500).json({

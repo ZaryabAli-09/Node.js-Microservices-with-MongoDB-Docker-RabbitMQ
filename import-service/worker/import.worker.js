@@ -15,7 +15,7 @@ const importWorker = new Worker(
 
       // Get current job state from Job Service
       let jobResp = await axios.get(
-        `http://${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
+        `${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
       );
 
       //   just for logging we  will remove it as we will put retroes in the logic even if something fails like server is down db is down etc
@@ -36,7 +36,7 @@ const importWorker = new Worker(
       }
       // Update job status to RUNNING
       const updatedJobResp = await axios.post(
-        `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
+        `${process.env.JOB_SERVICE_URL}/job-service/update`,
         {
           jobId,
           status: "RUNNING",
@@ -57,7 +57,7 @@ const importWorker = new Worker(
         try {
           // Fetch latest status for pause/cancel
           jobResp = await axios.get(
-            `http://${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
+            `${process.env.JOB_SERVICE_URL}/job-service/${jobId}`
           );
 
           const latestStatus = jobResp?.data?.data?.status;
@@ -91,7 +91,7 @@ const importWorker = new Worker(
 
           // Call task service
           await axios.post(
-            `http://${process.env.TASK_SERVICE_URL}/task-service/create-many`,
+            `${process.env.TASK_SERVICE_URL}/task-service/create-many`,
             {
               tasks: chunk,
               userId,
@@ -100,7 +100,7 @@ const importWorker = new Worker(
 
           // Update job progress
           await axios.post(
-            `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
+            `${process.env.JOB_SERVICE_URL}/job-service/update`,
             {
               jobId,
               currentChunk: chunkIndex + 1,
@@ -130,13 +130,10 @@ const importWorker = new Worker(
       }
 
       // Mark job as completed
-      await axios.post(
-        `http://${process.env.JOB_SERVICE_URL}/job-service/update`,
-        {
-          jobId,
-          status: "COMPLETED",
-        }
-      );
+      await axios.post(`${process.env.JOB_SERVICE_URL}/job-service/update`, {
+        jobId,
+        status: "COMPLETED",
+      });
       console.log(`[Worker] Job ${jobId} completed successfully!`);
     } catch (error) {
       console.error(`[Worker] Job ${job.id} failed:`, error);

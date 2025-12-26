@@ -27,7 +27,7 @@ export async function ImportEngine(req, res) {
     let jobId;
     try {
       const createJobResp = await axios.post(
-        `http://${process.env.JOB_SERVICE_URL}/job-service/create`,
+        `${process.env.JOB_SERVICE_URL}/job-service/create`,
         {
           userId,
           jobType: "IMPORT",
@@ -39,6 +39,9 @@ export async function ImportEngine(req, res) {
           processedItems: 0,
         }
       );
+      if (!createJobResp) {
+        throw new Error("Error occur while initilizing job");
+      }
 
       jobId = createJobResp.data.data._id;
     } catch (err) {
