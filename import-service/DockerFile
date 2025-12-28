@@ -1,5 +1,5 @@
 # specifying the runtime to run our app on
-FROM node:24-alpine
+FROM node:20-alpine
 
 
 # Setting working directory inside container e.g our service will in app folder in docker conatiner
