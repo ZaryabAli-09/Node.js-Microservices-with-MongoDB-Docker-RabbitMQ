@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-service
+spec:
+  replicas: 2 # number of pods
+  selector:
+    matchLabels:
+      app: task-service
+  template:
+    metadata:
+      labels:
+        app: task-service
+    spec:
+      containers:
+        - name: task-service
+          image: task-service:1.0
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: task-service-config # your ConfigMap
+            - secretRef:
+                name: task-service-secret # your Secret

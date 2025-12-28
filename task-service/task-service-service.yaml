@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-service
+spec:
+  selector:
+    app: task-service
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8001 # the port other services will use
+      targetPort: 8001 # the port inside the container
+      nodePort: 30002 # unique external port on minikube host

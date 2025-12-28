@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: import-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: import-service
+  template:
+    metadata:
+      labels:
+        app: import-service
+    spec:
+      containers:
+        - name: import-service
+          image: import-service:1.0
+          ports:
+            - containerPort: 8003
+          envFrom:
+            - configMapRef:
+                name: import-service-config
+            - secretRef:
+                name: import-service-secret
