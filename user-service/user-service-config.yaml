@@ -4,6 +4,7 @@ metadata:
   name: user-service-config
 data:
   PORT: "8000"
+  NODE_ENV: "production"
   TASK_SERVICE_URL: "http://task-service:8001"
   JOB_SERVICE_URL: "http://job-service:8002"
   IMPORT_SERVICE_URL: "http://import-service:8003"

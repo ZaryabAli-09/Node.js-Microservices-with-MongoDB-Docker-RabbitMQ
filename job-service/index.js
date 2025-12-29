@@ -4,7 +4,9 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./utils/dbConnection.js";
 import jobRouter from "./routes/job.routes.js";
 
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 const app = express();
 const PORT = process.env.PORT || 5002;
 

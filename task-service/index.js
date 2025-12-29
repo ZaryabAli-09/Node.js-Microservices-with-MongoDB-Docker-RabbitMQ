@@ -3,7 +3,9 @@ import { connectDB } from "./utils/dbConnection.js";
 import dotenv from "dotenv";
 import taskRouter from "./routes/task.routes.js";
 import cookieParser from "cookie-parser";
-dotenv.config();
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 const app = express();
 
 app.use(express.json());

@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: job-service-config
 data:
+  NODE_ENV: "production"
   PORT: "8002"
   USER_SERVICE_URL: "http://user-service:8000"
   TASK_SERVICE_URL: "http://task-service:8001"
