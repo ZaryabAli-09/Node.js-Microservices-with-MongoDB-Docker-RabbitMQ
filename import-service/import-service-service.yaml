@@ -2,12 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: import-service
+  namespace: dev
 spec:
   selector:
     app: import-service
-  type: NodePort
+  type: ClusterIP
   ports:
     - protocol: TCP
-      port: 8003 # internal cluster port
+      port: 8003 # service port
       targetPort: 8003 # container port
-      nodePort: 30004 # exposed externally
+
