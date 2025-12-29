@@ -2,8 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: user-service
+  namespace: dev # isolated environment
 spec:
-  replicas: 2 # number of pods
+  replicas: 1 # number of pods
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
   selector:
     matchLabels:
       app: user-service
@@ -14,7 +20,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: user-service:1.0
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:user-service
           ports:
             - containerPort: 8000
           envFrom:

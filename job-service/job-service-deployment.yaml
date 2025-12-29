@@ -2,8 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: job-service
+  namespace: dev
 spec:
-  replicas: 2
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
   selector:
     matchLabels:
       app: job-service
@@ -14,7 +20,7 @@ spec:
     spec:
       containers:
         - name: job-service
-          image: job-service:1.0
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:job-service
           ports:
             - containerPort: 8002
           envFrom:
