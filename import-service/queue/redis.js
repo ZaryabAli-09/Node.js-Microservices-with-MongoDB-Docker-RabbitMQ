@@ -17,8 +17,9 @@ export const redisConnection = new Redis(process.env.REDIS_URL, {
   // Connection pooling settings
   lazyConnect: false,
   reconnectOnError: (err) => {
-    const targetError = "READONLY";
-    if (err.message.includes(targetError)) {
+    // Reconnect on network errors or READONLY
+    const reconnectErrors = ["READONLY", "ECONNRESET", "ECONNREFUSED"];
+    if (reconnectErrors.some((e) => err.message.includes(e))) {
       return true;
     }
     return false;
