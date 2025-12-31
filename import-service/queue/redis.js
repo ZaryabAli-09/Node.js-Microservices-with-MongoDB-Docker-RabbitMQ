@@ -1,12 +1,3 @@
-// import { Redis } from "ioredis";
-
-// export const redisConnection = new Redis({
-//   host: "127.0.0.1",
-//   port: 6379,
-//   maxRetriesPerRequest: null, // <--- THIS IS REQUIRED
-// });
-// redisConnection.ping().then(console.log).catch(console.error);
-
 import { Redis } from "ioredis";
 import dotenv from "dotenv";
 
@@ -16,6 +7,21 @@ if (process.env.NODE_ENV !== "production") {
 
 export const redisConnection = new Redis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
+  enableReadyCheck: false, // Reduce unnecessary checks
+  enableOfflineQueue: true,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+  // Connection pooling settings
+  lazyConnect: false,
+  reconnectOnError: (err) => {
+    const targetError = "READONLY";
+    if (err.message.includes(targetError)) {
+      return true;
+    }
+    return false;
+  },
 });
 
 redisConnection
