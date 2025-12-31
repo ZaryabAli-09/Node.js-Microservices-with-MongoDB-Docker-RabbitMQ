@@ -3,7 +3,7 @@ import { redisConnection } from "./redis.js";
 
 export const importQueue = new Queue("import-queue", {
   connection: redisConnection,
-  defaultJobOptions: {
+    defaultJobOptions: {
     attempts: 5,
     backoff: {
       type: "exponential",
