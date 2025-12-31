@@ -3,6 +3,8 @@ import { redisConnection } from "../queue/redis.js";
 import axios from "axios";
 import { wait } from "../utils/helpers.js";
 
+console.log(`[Worker] Worker process booted at ${new Date().toISOString()}`);
+
 const importWorker = new Worker(
   "import-queue",
   async (job) => {
@@ -139,5 +141,42 @@ const importWorker = new Worker(
       console.error(`[Worker] Job ${job.id} failed:`, error);
     }
   },
-  { connection: redisConnection, concurrency: 2 }
+  { connection: redisConnection, concurrency: 1 }
 );
+
+/* ================================
+   WORKER LIFECYCLE EVENTS
+================================ */
+
+importWorker.on("active", (job) => {
+  console.log(
+    `[Worker] Picked job from queue at ${new Date().toISOString()} | jobId=${
+      job.id
+    }`
+  );
+});
+
+importWorker.on("drained", () => {
+  console.log(
+    `[Worker] Queue empty — worker sleeping at ${new Date().toISOString()}`
+  );
+});
+
+importWorker.on("stalled", (jobId) => {
+  console.warn(
+    `[Worker] Stalled job recovered at ${new Date().toISOString()} | jobId=${jobId}`
+  );
+});
+
+importWorker.on("completed", (job) => {
+  console.log(
+    `[Worker] Job completed at ${new Date().toISOString()} | jobId=${job.id}`
+  );
+});
+
+importWorker.on("failed", (job, err) => {
+  console.error(
+    `[Worker] Job failed at ${new Date().toISOString()} | jobId=${job?.id}`,
+    err.message
+  );
+});

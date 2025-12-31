@@ -9,6 +9,7 @@ export const redisConnection = new Redis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
   enableReadyCheck: false, // Reduce unnecessary checks
   enableOfflineQueue: true,
+
   retryStrategy: (times) => {
     const delay = Math.min(times * 50, 2000);
     return delay;

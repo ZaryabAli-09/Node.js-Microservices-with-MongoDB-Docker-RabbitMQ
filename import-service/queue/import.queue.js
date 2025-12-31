@@ -3,20 +3,22 @@ import { redisConnection } from "./redis.js";
 
 export const importQueue = new Queue("import-queue", {
   connection: redisConnection,
-    defaultJobOptions: {
+  defaultJobOptions: {
     attempts: 5,
     backoff: {
       type: "exponential",
       delay: 2000,
     },
-    removeOnComplete: true, // Remove completed jobs to save Redis memory
+
     removeOnFail: false,
   },
   settings: {
+    // Reduce stalled checks to lower Upstash commands (check every 60s instead of 5s)
     maxStalledCount: 2,
-    stalledInterval: 5000,
+    stalledInterval: 60000,
     maxRetriesPerRequest: null,
-    lockDuration: 30000,
-    lockRenewTime: 15000,
+    // Longer lock durations reduce frequent renewals
+    lockDuration: 120000,
+    lockRenewTime: 60000,
   },
 });

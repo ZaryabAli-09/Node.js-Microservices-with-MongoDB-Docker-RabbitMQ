@@ -13,7 +13,7 @@ export async function ImportEngine(req, res) {
     let tasks;
     try {
       const fetchTasksResp = await axios.get(
-        "https://dummyjson.com/todos?limit=2000"
+        "https://dummyjson.com/todos?limit=50"
       );
       tasks = fetchTasksResp.data.todos.map((t) => ({
         title: t.todo,
