@@ -1,12 +1,18 @@
-node_modules 
+# Node.js
+node_modules/
+
+# Environment variables
 .env
 .env.example.local
 .env.local
-dist
 .env.docker
-*.generated.yaml
-*.secret.yaml
-*-secret.yaml
-secrets.yaml
-secrets/*.yaml
-import-service-secret.yaml
+
+# Build outputs
+dist/
+
+# YAML files - ALL of them
+*.yaml
+
+# If you want to keep SOME YAML files but not others, be specific:
+# *.secret.yaml
+# config-*.yaml
