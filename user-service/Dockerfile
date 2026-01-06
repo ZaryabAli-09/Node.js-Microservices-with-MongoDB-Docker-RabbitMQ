@@ -1,4 +1,6 @@
-FROM node:20-alpine
+# FROM node:20-alpine   
+# using AWS ECR Public nodejs image no docker hub limitations 
+FROM public.ecr.aws/nodejs/node:20-alpine 
 
 WORKDIR /app
 
