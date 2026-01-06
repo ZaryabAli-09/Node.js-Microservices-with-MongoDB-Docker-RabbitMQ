@@ -1,0 +1,66 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-south-1"
+    ECR_REPO: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend
+
+phases:
+  install:
+    runtime-versions:
+      docker: 19
+    commands:
+      - echo "Installing kubectl"
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/
+
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+      - REPOSITORY_URI=$ECR_REPO
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+
+      - echo "Updating kubeconfig for EKS cluster..."
+      - aws eks update-kubeconfig --region $AWS_REGION --name microservices-backend
+
+  build:
+    commands:
+      - echo "Building and pushing user-service image to ECR..."
+      - docker build -t $ECR_REPO:user-service-$IMAGE_TAG ./user-service
+      - docker push $ECR_REPO:user-service-$IMAGE_TAG
+
+      - echo "Building and pushing task-service image to ECR..."
+      - docker build -t $ECR_REPO:task-service-$IMAGE_TAG ./task-service
+      - docker push $ECR_REPO:task-service-$IMAGE_TAG
+
+      - echo "Building and pushing job-service image to ECR..."
+      - docker build -t $ECR_REPO:job-service-$IMAGE_TAG ./job-service
+      - docker push $ECR_REPO:job-service-$IMAGE_TAG
+
+      - echo "Building and pushing import-service image to ECR..."
+      - docker build -t $ECR_REPO:import-service-$IMAGE_TAG ./import-service
+      - docker push $ECR_REPO:import-service-$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo "Deploying to EKS cluster..."
+      - kubectl set image deployment/import-service import-service=$ECR_REPO:import-service-$IMAGE_TAG -n dev
+      - kubectl set image deployment/job-service job-service=$ECR_REPO:job-service-$IMAGE_TAG -n dev
+      - kubectl set image deployment/task-service task-service=$ECR_REPO:task-service-$IMAGE_TAG -n dev
+      - kubectl set image deployment/user-service user-service=$ECR_REPO:user-service-$IMAGE_TAG -n dev
+      - kubectl rollout status deployment/import-service -n dev
+      - kubectl rollout status deployment/job-service -n dev
+      - kubectl rollout status deployment/task-service -n dev
+      - kubectl rollout status deployment/user-service -n dev
+      - kubectl apply -f user-service/
+      - kubectl apply -f task-service/
+      - kubectl apply -f job-service/
+      - kubectl apply -f import-service/
+      - echo "Applying ingress and configs/secrets..."
+      - kubectl apply -f k8s/ingress.yaml
+
+artifacts:
+  files: []
