@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: import-service-config
+data:
+  NODE_ENV: "production"
+  PORT: "8003"
+  USER_SERVICE_URL: "http://user-service:8000"
+  TASK_SERVICE_URL: "http://task-service:8001"
+  JOB_SERVICE_URL: "http://job-service:8002"
+  # Worker & Redis tuning to reduce Upstash commands
+  RUN_WORKER: "false" # Set to "true" only in worker deployment
+  BULL_BOARD: "false" # Disable bull-board in production (polls Redis heavily)

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: import-worker
+  namespace: dev
+  labels:
+    app: import-worker
+spec:
+  replicas: 1 # Always use 1 replica for worker to avoid N× Redis connections
+  selector:
+    matchLabels:
+      app: import-worker
+  template:
+    metadata:
+      labels:
+        app: import-worker
+    spec:
+      containers:
+        - name: import-worker
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:import-1.1
+          # Run worker only (WORKDIR is /app, so path is relative to that)
+          command: ["node", "worker/import.worker.js"]
+          envFrom:
+            - configMapRef:
+                name: import-service-config
+            - secretRef:
+                name: import-service-secret
+          env:
+            # Override RUN_WORKER to true for worker-only pod
+            - name: RUN_WORKER
+              value: "true"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          # Health checks to avoid flapping restarts
+          livenessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - "process.exit(0)"
+            initialDelaySeconds: 30
+            periodSeconds: 60
+          readinessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - "process.exit(0)"
+            initialDelaySeconds: 10
+            periodSeconds: 30
+      restartPolicy: Always

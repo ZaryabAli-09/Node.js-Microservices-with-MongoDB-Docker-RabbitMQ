@@ -10,8 +10,8 @@ node_modules/
 # Build outputs
 dist/
 
-# YAML files - ALL of them
-*.yaml
+#secret YAML file
+*secret.yaml
 
 # If you want to keep SOME YAML files but not others, be specific:
 # *.secret.yaml
