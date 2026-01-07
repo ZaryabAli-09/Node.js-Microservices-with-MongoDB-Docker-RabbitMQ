@@ -33,7 +33,7 @@ phases:
       - aws sts get-caller-identity
 
       - echo "Updating kubeconfig for EKS cluster..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME --role-arn arn:aws:iam::964474461010:role/service-role/codebuild-eks-microservices-cicd-build-service-role
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
 
       - echo "Waiting for authentication to propagate..."
       - sleep 5
