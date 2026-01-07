@@ -29,11 +29,17 @@ phases:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
 
-      - echo "Updating kubeconfig for EKS cluster..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name microservices-backend
+      - echo "Checking CodeBuild IAM identity..."
+      - aws sts get-caller-identity
 
-      - echo "Verifying cluster connection (optional)..."
-      - kubectl get nodes || echo "⚠ Warning - Cannot list nodes"
+      - echo "Updating kubeconfig for EKS cluster..."
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+      - echo "Waiting for authentication to propagate..."
+      - sleep 5
+
+      - echo "Testing cluster access..."
+      - kubectl get nodes
 
   build:
     commands:
