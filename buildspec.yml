@@ -34,7 +34,7 @@ phases:
 
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
-       - echo "=== DEBUG: Checking kubeconfig ==="
+      - echo "=== DEBUG: Checking kubeconfig ==="
       - cat ~/.kube/config | grep -A 5 "clusters:"
       - cat ~/.kube/config | grep -A 10 "users:"
       - echo "=== DEBUG: Checking AWS credentials ==="
