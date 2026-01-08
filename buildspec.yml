@@ -35,7 +35,7 @@ phases:
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
       - echo "Waiting for authentication to propagate..."
-      - sleep 5
+      - sleep 10
 
       - echo "Testing cluster access..."
       - kubectl get nodes
