@@ -34,11 +34,24 @@ phases:
 
       - echo "Updating kubeconfig for EKS cluster..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+
+      - echo "=== DEBUG: Checking kubeconfig ==="
+      - cat ~/.kube/config | grep -A 5 "clusters:"
+      - cat ~/.kube/config | grep -A 10 "users:"
+
+      - echo "=== DEBUG: Checking AWS credentials ==="
+      - aws sts get-caller-identity
+
+      - echo "=== DEBUG: Checking kubectl current context ==="
+      - kubectl config current-context
+      - kubectl config view
+
       - echo "Waiting for authentication to propagate..."
-      - sleep 10
+      - sleep 15
 
       - echo "Testing cluster access..."
       - kubectl get nodes
+      - echo "✓ Successfully authenticated with EKS cluster"
 
   build:
     commands:
@@ -91,20 +104,28 @@ phases:
   post_build:
     commands:
       - echo "Deploying to EKS cluster..."
-      - kubectl set image deployment/import-service import-service=$ECR_REPO:import-service-$IMAGE_TAG -n dev
-      - kubectl set image deployment/job-service job-service=$ECR_REPO:job-service-$IMAGE_TAG -n dev
-      - kubectl set image deployment/task-service task-service=$ECR_REPO:task-service-$IMAGE_TAG -n dev
-      - kubectl set image deployment/user-service user-service=$ECR_REPO:user-service-$IMAGE_TAG -n dev
-      - kubectl rollout status deployment/import-service -n dev
-      - kubectl rollout status deployment/job-service -n dev
-      - kubectl rollout status deployment/task-service -n dev
-      - kubectl rollout status deployment/user-service -n dev
-      - kubectl apply -f user-service/
-      - kubectl apply -f task-service/
-      - kubectl apply -f job-service/
-      - kubectl apply -f import-service/
-      - echo "Applying ingress and configs/secrets..."
-      - kubectl apply -f k8s/ingress.yaml
+
+      # Update existing deployments with new images
+      - kubectl set image deployment/user-service user-service=$ECR_REPO:user-service-$IMAGE_TAG -n $NAMESPACE --record
+      - kubectl set image deployment/task-service task-service=$ECR_REPO:task-service-$IMAGE_TAG -n $NAMESPACE --record
+      - kubectl set image deployment/job-service job-service=$ECR_REPO:job-service-$IMAGE_TAG -n $NAMESPACE --record
+      - kubectl set image deployment/import-service import-service=$ECR_REPO:import-service-$IMAGE_TAG -n $NAMESPACE --record
+
+      # Apply manifests to ensure all configs are up-to-date
+      - kubectl apply -f user-service/ -n $NAMESPACE
+      - kubectl apply -f task-service/ -n $NAMESPACE
+      - kubectl apply -f job-service/ -n $NAMESPACE
+      - kubectl apply -f import-service/ -n $NAMESPACE
+      - kubectl apply -f k8s/ingress.yaml -n $NAMESPACE
+
+      # Wait for rollouts to complete
+      - echo "Waiting for deployments to roll out..."
+      - kubectl rollout status deployment/user-service -n $NAMESPACE --timeout=5m
+      - kubectl rollout status deployment/task-service -n $NAMESPACE --timeout=5m
+      - kubectl rollout status deployment/job-service -n $NAMESPACE --timeout=5m
+      - kubectl rollout status deployment/import-service -n $NAMESPACE --timeout=5m
+
+      - echo "✓ All services deployed successfully"
 
 artifacts:
   files: []
