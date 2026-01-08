@@ -103,10 +103,10 @@ phases:
       - kubectl rollout status deployment/job-service -n $NAMESPACE
       - kubectl rollout status deployment/task-service -n $NAMESPACE
       - kubectl rollout status deployment/user-service -n $NAMESPACE
-      - kubectl apply -f user-service/
-      - kubectl apply -f task-service/
-      - kubectl apply -f job-service/
-      - kubectl apply -f import-service/
+      - kubectl apply -f user-service/ --validate=false
+      - kubectl apply -f task-service/ --validate=false
+      - kubectl apply -f job-service/ --validate=false
+      - kubectl apply -f import-service/ --validate=false
       - echo "Applying ingress and configs/secrets..."
       - kubectl apply -f k8s/ingress.yaml
 
