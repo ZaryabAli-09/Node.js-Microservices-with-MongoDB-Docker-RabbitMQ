@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: import-service
-          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:import-1.1
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:import-service-<commit-hash>
+          imagePullPolicy: Always
           ports:
             - containerPort: 8003
           envFrom:

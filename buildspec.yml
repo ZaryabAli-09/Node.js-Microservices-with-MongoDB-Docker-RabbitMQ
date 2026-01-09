@@ -95,10 +95,12 @@ phases:
   post_build:
     commands:
       - echo "Deploying to EKS cluster..."
-      - kubectl set image deployment/import-service import-service=$ECR_REPO:import-service-$IMAGE_TAG -n $NAMESPACE
-      - kubectl set image deployment/job-service job-service=$ECR_REPO:job-service-$IMAGE_TAG -n $NAMESPACE
-      - kubectl set image deployment/task-service task-service=$ECR_REPO:task-service-$IMAGE_TAG -n $NAMESPACE
-      - kubectl set image deployment/user-service user-service=$ECR_REPO:user-service-$IMAGE_TAG -n $NAMESPACE
+      - sed -i "s|<commit-hash>|$IMAGE_TAG|g" ./user-service/*deployment.yaml
+      - sed -i "s|<commit-hash>|$IMAGE_TAG|g" ./task-service/*deployment.yaml
+      - sed -i "s|<commit-hash>|$IMAGE_TAG|g" ./job-service/*deployment.yaml
+      - sed -i "s|<commit-hash>|$IMAGE_TAG|g" ./import-service/*deployment.yaml
+
+      - echo "Applying Kubernetes manifests..."
       - kubectl rollout status deployment/import-service -n $NAMESPACE
       - kubectl rollout status deployment/job-service -n $NAMESPACE
       - kubectl rollout status deployment/task-service -n $NAMESPACE

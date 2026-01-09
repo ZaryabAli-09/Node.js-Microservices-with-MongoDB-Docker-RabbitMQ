@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:user-service
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:user-service-<commit-hash>
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:

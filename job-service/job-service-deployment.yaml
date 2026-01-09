@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: job-service
-          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:job-service
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:job-service-<commit-hash>
+          imagePullPolicy: Always
           ports:
             - containerPort: 8002
           envFrom:

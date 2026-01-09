@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: task-service
-          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:task-service
+          image: 964474461010.dkr.ecr.ap-south-1.amazonaws.com/microservices-backend:task-service-<commit-hash>
+          imagePullPolicy: Always
           ports:
             - containerPort: 8001
           envFrom:
