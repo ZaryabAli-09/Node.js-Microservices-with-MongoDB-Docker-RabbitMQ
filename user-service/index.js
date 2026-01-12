@@ -29,7 +29,7 @@ app.use((req, res) => {
 
 app.listen(port, async () => {
   try {
-    console.log(`User-service running on port ${port} 🚀🚀🚀`);
+    console.log(`User-service running on port ${port} 🚀🚀🚀🚀`);
     await connectDB();
   } catch (error) {
     console.log(`Error starting server : ${error.message}`);

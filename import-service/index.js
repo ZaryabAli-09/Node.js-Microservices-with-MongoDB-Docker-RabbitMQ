@@ -44,5 +44,5 @@ app.post("/import-service/import-tasks", ImportEngine);
 
 // App listening
 app.listen(PORT, () => {
-  console.log(`Import Service is running on port ${PORT} 🚀🚀🚀`);
+  console.log(`Import Service is running on port ${PORT} 🚀🚀🚀🚀`);
 });
