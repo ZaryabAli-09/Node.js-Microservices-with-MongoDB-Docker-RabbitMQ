@@ -1,55 +1,125 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRY = "30d";
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict",
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+};
+
+// Validation helpers
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+function validatePassword(password) {
+  return password && password.length >= 6;
+}
+
+// Token generation
+function generateToken(userId) {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+  return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+}
+
 export async function registerUser(req, res) {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Name, email and password are required" });
+    // Validate input
+    if (!name?.trim() || !email?.trim() || !password) {
+      return res.status(400).json({
+        message: "Name, email, and password are required",
+      });
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res
-        .status(409)
-        .json({ message: "User with this email already exists" });
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
     }
-    const newUser = new User({ name, email, password });
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({
+        message: "User with this email already exists",
+      });
+    }
+
+    // Create new user
+    const newUser = new User({
+      name: name.trim(),
+      email: email.toLowerCase(),
+      password,
+    });
+
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({
+      message: "User registered successfully",
+      userId: newUser._id,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server error" || error.message });
+    console.error("Register error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
 }
 
 export async function loginUser(req, res) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
-    const user = await User.findOne({ email }).select("-password");
-    if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+
+    // Validate input
+    if (!email?.trim() || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
 
-    // set cookie BEFORE sending response
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false, // change to true in production
-      sameSite: "none",
+    // Find user and verify password
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // Generate token
+    const token = generateToken(user._id);
+
+    // Set cookie and send response
+    res.cookie("token", token, COOKIE_OPTIONS);
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      userId: user._id,
     });
-    return res.status(200).json({ message: "Login successful", token });
   } catch (error) {
-    res.status(500).json({ message: "Internal Server error" || error.message });
+    console.error("Login error:", error);
+    res.status(500).json({
+      message: "Internal server error",
+    });
   }
+}
+
+export async function logoutUser(req, res) {
+  res.clearCookie("token", COOKIE_OPTIONS);
+  res.status(200).json({ message: "Logout successful" });
 }
