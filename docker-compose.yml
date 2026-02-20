@@ -1,40 +1,106 @@
+version: "3.9"
+
 services:
   redis:
-    image: redis:7
+    image: redis:7-alpine
     container_name: redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
     networks:
       - micro-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   user-service:
-    build: ./user-service
+    build:
+      context: ./user-service
     container_name: user-service
-    env_file: ./user-service/.env.docker
+    restart: unless-stopped
+    env_file:
+      - ./user-service/.env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   task-service:
-    build: ./task-service
+    build:
+      context: ./task-service
     container_name: task-service
-    env_file: ./task-service/.env.docker
+    restart: unless-stopped
+    env_file:
+      - ./task-service/.env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "8001:8001"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   job-service:
-    build: ./job-service
+    build:
+      context: ./job-service
     container_name: job-service
-    env_file: ./job-service/.env.docker
+    restart: unless-stopped
+    env_file:
+      - ./job-service/.env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "8002:8002"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
   import-service:
-    build: ./import-service
+    build:
+      context: ./import-service
     container_name: import-service
-    env_file: ./import-service/.env.docker
+    restart: unless-stopped
+    env_file:
+      - ./import-service/.env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "8003:8003"
+    networks:
+      - micro-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 networks:
-  default:
-    name: micro-net
+  micro-net:
+    driver: bridge
+
+volumes:
+  redis-data:
