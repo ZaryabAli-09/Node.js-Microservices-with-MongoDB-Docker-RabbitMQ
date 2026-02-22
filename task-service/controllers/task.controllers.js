@@ -1,123 +1,159 @@
 import { Task } from "../models/task.model.js";
 
+/**
+ * Helper: Standard API Response
+ */
+const sendResponse = (res, status, message, data = null) => {
+  return res.status(status).json({ message, data });
+};
+
+/**
+ * Create Single Task
+ */
 export async function createTask(req, res) {
   try {
-    console.log(req.user);
     const userId = req.user?.id;
+    if (!userId) {
+      return sendResponse(res, 401, "Unauthorized");
+    }
+
     const { title, description } = req.body;
-    const newTask = new Task({ title, description, userId });
-    const savedTask = await newTask.save();
-    res
-      .status(201)
-      .json({ message: "Task created successfully", data: savedTask });
+    if (!title) {
+      return sendResponse(res, 400, "Title is required");
+    }
+
+    const task = await Task.create({ title, description, userId });
+
+    return sendResponse(res, 201, "Task created successfully", task);
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
 
-export async function getAllTask(req, res) {
+/**
+ * Get All Tasks (Admin use case)
+ */
+export async function getAllTasks(req, res) {
   try {
-    const tasks = await Task.find();
-    if (tasks.length === 0) {
-      return res.status(404).json({ message: "No tasks found" });
-    }
-    res
-      .status(200)
-      .json({ message: "Tasks retrieved successfully", data: tasks });
+    const tasks = await Task.find().lean();
+    return sendResponse(res, 200, "Tasks retrieved successfully", tasks);
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
+
+/**
+ * Get Task By ID (User Scoped)
+ */
 export async function getTaskById(req, res) {
   try {
+    const userId = req.user?.id;
     const { id } = req.params;
-    const task = await Task.findById(id);
+
+    const task = await Task.findOne({ _id: id, userId }).lean();
+
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      return sendResponse(res, 404, "Task not found");
     }
-    res
-      .status(200)
-      .json({ message: "Task retrieved successfully", data: task });
+
+    return sendResponse(res, 200, "Task retrieved successfully", task);
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
+
+/**
+ * Get Logged-in User Tasks
+ */
 export async function getUserTasks(req, res) {
   try {
     const userId = req.user?.id;
-
     if (!userId) {
-      return res.status(400).json({ message: "User ID not found in token" });
+      return sendResponse(res, 401, "Unauthorized");
     }
-    const tasks = await Task.find({ userId });
-    if (!tasks) {
-      return res.status(404).json({ message: "No tasks found for this user" });
-    }
-    res
-      .status(200)
-      .json({ message: "User tasks retrieved successfully", data: tasks });
+
+    const tasks = await Task.find({ userId }).lean();
+
+    return sendResponse(res, 200, "User tasks retrieved successfully", tasks);
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
+
+/**
+ * Update Task (User Scoped)
+ */
 export async function updateTask(req, res) {
   try {
+    const userId = req.user?.id;
     const { id } = req.params;
     const { title, description } = req.body;
-    const updatedTask = await Task.findByIdAndUpdate(
-      id,
+
+    const updatedTask = await Task.findOneAndUpdate(
+      { _id: id, userId },
       { title, description },
-      { new: true }
+      { new: true },
     );
+
     if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found" });
+      return sendResponse(res, 404, "Task not found");
     }
-    res
-      .status(200)
-      .json({ message: "Task updated successfully", data: updatedTask });
+
+    return sendResponse(res, 200, "Task updated successfully", updatedTask);
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
+
+/**
+ * Delete Task (User Scoped)
+ */
 export async function deleteTask(req, res) {
   try {
+    const userId = req.user?.id;
     const { id } = req.params;
-    const deletedTask = await Task.findByIdAndDelete(id);
+
+    const deletedTask = await Task.findOneAndDelete({ _id: id, userId });
+
     if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found" });
+      return sendResponse(res, 404, "Task not found");
     }
-    res.status(200).json({ message: "Task deleted successfully" });
+
+    return sendResponse(res, 200, "Task deleted successfully");
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal Server Error" });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
 
+/**
+ * Bulk Create Tasks (User Scoped)
+ */
 export async function createTasks(req, res) {
   try {
-    const { tasks, userId } = req.body;
-    if (!Array.isArray(tasks) || tasks.length === 0) {
-      return res.status(400).json({
-        message: "Tasks must be a non-empty array",
-      });
+    const userId = req.user?.id;
+    const { tasks } = req.body;
+
+    if (!userId) {
+      return sendResponse(res, 401, "Unauthorized");
     }
 
-    // map tasks to attach userId
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+      return sendResponse(res, 400, "Tasks must be a non-empty array");
+    }
+
     const tasksData = tasks.map((task) => ({
-      ...task,
+      title: task.title,
+      description: task.description,
       userId,
     }));
 
-    // insert many tasks
     const savedTasks = await Task.insertMany(tasksData);
 
-    return res.status(201).json({
-      message: "Tasks created successfully",
+    return sendResponse(res, 201, "Tasks created successfully", {
       insertedCount: savedTasks.length,
-      data: savedTasks,
+      tasks: savedTasks,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Internal Server Error",
-    });
+    return sendResponse(res, 500, error.message || "Internal Server Error");
   }
 }
